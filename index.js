@@ -6,6 +6,7 @@ require('./api')(app);
 
 var io = require('socket.io')(process.env.PORT || 3000);
 app.get('/', function(req, res){
+  console.log('here');
     res.send('<h1>Hello world</h1>');
   });
 
@@ -75,6 +76,6 @@ io.on('connection', function(socket){
 
 });
 
-http.listen(process.env.PORT || 5000, function(){
+http.listen(process.env.PORT || 3000, function(){
   console.log('listening on *:3000');
 });
