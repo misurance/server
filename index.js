@@ -4,9 +4,7 @@ var io = require('socket.io')(http);
 
 require('./api')(app);
 
-var io = require('socket.io')(process.env.PORT || 3000);
 app.get('/', function(req, res){
-  console.log('here');
     res.send('<h1>Hello world</h1>');
   });
 
