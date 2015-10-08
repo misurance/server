@@ -1,5 +1,7 @@
 var bodyParser = require('body-parser');
 
+var customersStorage = [];
+
 module.exports = function(app){
   var braintree = require("braintree");
   app.use(bodyParser.json());
@@ -18,11 +20,28 @@ module.exports = function(app){
     });
   });
 
-  app.post("/api/checkout", function (req, res) {
-    // console.log(req.body);
-    var nonce = req.body.payment_method_nonce;
-    // Use payment method nonce here
-    console.log(nonce);
-    res.send('ok')
+  app.post("/api/create_customer", function (req, res) {
+    gateway.customer.create({
+      firstName: "anonymous",
+      lastName: "anonymous",
+      paymentMethodNonce: req.body.nonce
+    }, function (err, result) {
+      console.log(result);
+      customersStorage.push({id: req.body.userId, braintreeDetails: result.customer})
+    });
+    res.end();
+  });
+
+  app.post("/api/transaction", function (req, res) {
+    var customer = customersStorage.filter((customer) => customer.id == req.body.userId)[0];
+
+    gateway.transaction.sale({
+      amount: req.body.amount,
+      customerId: customer.braintreeDetails.id
+    }, function (err, result) {
+      console.log(err);
+      console.log(result)
+    });
+    res.end();
   });
 };
