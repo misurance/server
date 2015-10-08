@@ -4,6 +4,7 @@ var fetch = require("node-fetch");
 var _ = require("underscore");
 var geoutil = require('geoutil');
 var feedWriter = require('./feedWriter');
+var activeDriversWriter = require('./activeDriversWriter');
 
 var speedLimitByHighwayType = {
 	motorway: 110,
@@ -77,13 +78,14 @@ var accidentsTable = r.table('accidents');
 var listener = function(io, rethinkdbConnection){
 
 	io.on('connection', function(socket){
+		console.log('connected');
 		var score = 0;
 		var loggedInUser = null;
 		var currentRide = null;
 
 	  socket.on('start driving', (username, rideId)=>{
 		loggedInUser = username;
-		feedWriter.write(username, 'Drive started');
+		feedWriter.stateChanged(username, 'Drive started');
 		currentRide = rideId;
 		var trafficStream = rethinkToRxStream(trafficDataTable
 		  	.filter({rideId:currentRide})
@@ -110,7 +112,7 @@ var listener = function(io, rethinkdbConnection){
 			.distinctUntilChanged(data => data.isExceedingLimit)
 			.subscribe(data => {
 				feedWriter.stateChanged(
-					username, 
+					username,
 					data.isExceedingLimit ? 'Exceeded speed limit' : 'Driving within speed limit');
 			});
 
@@ -124,7 +126,7 @@ var listener = function(io, rethinkdbConnection){
 			.sample(10 * 1000)
 			.flatMap(x=>{
 				return rethinkToRxStream(accidentsTable
-						.map(function(acc) { return { 
+						.map(function(acc) { return {
 							severity:acc('severity'),
 						 	distance:acc('location').distance(x.location) }
 						})
@@ -169,7 +171,7 @@ var listener = function(io, rethinkdbConnection){
 		  	console.log("insert: " + time + ", " + speed + "," + location);
 
 			//update firebase
-
+			activeDriversWriter.updateLocation(loggedInUser, location);
 		});
 
 		socket.on('emergency brake', (time, severity)=>{
@@ -183,7 +185,7 @@ var listener = function(io, rethinkdbConnection){
 		});
 
 		socket.on('disconnect', function () {
-			
+
 		});
 
 	});

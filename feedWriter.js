@@ -5,6 +5,7 @@ module.exports = {
   updatePremium: function(userId, rideScore){
     var date = new Date();
     var event = {
+      type: 'updatePremium',
       time: date.getHours() + ':' + date.getMinutes(),
       premium: rideScore,
     };
@@ -13,11 +14,13 @@ module.exports = {
   },
 
   stateChanged: function(userId, newState) {
+    var date = new Date();
     var event = {
+      type:'stateChanged',
       time: date.getHours() + ':' + date.getMinutes(),
       newState: newState
     };
-    
+
     console.log('stateChanged: ' + JSON.stringify(event));
     ref.child(userId).child('feed').push(event);
   }
