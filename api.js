@@ -1,5 +1,9 @@
+var bodyParser = require('body-parser');
+
 module.exports = function(app){
   var braintree = require("braintree");
+  app.use(bodyParser.json());
+  app.use(bodyParser.urlencoded({ extended: false }));
 
   var gateway = braintree.connect({
     environment: braintree.Environment.Sandbox,
@@ -14,8 +18,11 @@ module.exports = function(app){
     });
   });
 
-  app.post("/checkout", function (req, res) {
+  app.post("/api/checkout", function (req, res) {
+    // console.log(req.body);
     var nonce = req.body.payment_method_nonce;
     // Use payment method nonce here
+    console.log(nonce);
+    res.send('ok')
   });
 };
