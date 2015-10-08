@@ -19704,40 +19704,25 @@
 	var Feed = _react2['default'].createClass({
 	  displayName: 'Feed',
 
+	  getInitialState: function getInitialState() {
+	    return {
+	      feedItems: []
+	    };
+	  },
 	  render: function render() {
+	    var createFeedItem = function createFeedItem(event) {
+	      return _react2['default'].createElement(
+	        'li',
+	        { key: event.key },
+	        event.time,
+	        ' ',
+	        event.message
+	      );
+	    };
 	    return _react2['default'].createElement(
 	      'ul',
 	      null,
-	      _react2['default'].createElement(
-	        'li',
-	        null,
-	        'hi'
-	      ),
-	      _react2['default'].createElement(
-	        'li',
-	        null,
-	        'hi'
-	      ),
-	      _react2['default'].createElement(
-	        'li',
-	        null,
-	        'hi'
-	      ),
-	      _react2['default'].createElement(
-	        'li',
-	        null,
-	        'hi'
-	      ),
-	      _react2['default'].createElement(
-	        'li',
-	        null,
-	        'hi'
-	      ),
-	      _react2['default'].createElement(
-	        'li',
-	        null,
-	        'hi'
-	      )
+	      this.state.feedItems.map(createFeedItem)
 	    );
 	  }
 	});

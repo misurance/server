@@ -1,15 +1,16 @@
 import React, { PropTypes } from 'react'
 
 const Feed = React.createClass({
+  getInitialState: function() {
+    return {
+      feedItems : []
+    };
+  },
   render () {
+    var createFeedItem = (event) => <li key={event.key}>{event.time} {event.message}</li>;
     return (
       <ul>
-        <li>hi</li>
-        <li>hi</li>
-        <li>hi</li>
-        <li>hi</li>
-        <li>hi</li>
-        <li>hi</li>
+        {this.state.feedItems.map(createFeedItem)}
       </ul>
     )
   }
