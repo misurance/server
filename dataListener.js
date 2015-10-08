@@ -4,6 +4,7 @@ var fetch = require("node-fetch");
 var _ = require("underscore");
 var geoutil = require('geoutil');
 var feedWriter = require('./feedWriter');
+var activeDriversWriter = require('./activeDriversWriter');
 
 var speedLimitByHighwayType = {
 	motorway: 110,
@@ -79,6 +80,7 @@ var accidentsTable = r.table('accidents');
 var listener = function(io, rethinkdbConnection){
 
 	io.on('connection', function(socket){
+		console.log('connected');
 		var score = 0;
 		var loggedInUser = null;
 		var currentRide = null;
@@ -123,7 +125,7 @@ var listener = function(io, rethinkdbConnection){
 			.sample(10000)
 			.flatMap(x=>{
 				return rethinkToRxStream(accidentsTable
-						.map(function(acc) { return { 
+						.map(function(acc) { return {
 							severity:acc('severity'),
 						 	distance:acc('location').distance(x.location) }
 						})
@@ -155,6 +157,9 @@ var listener = function(io, rethinkdbConnection){
 	  });
 
 		socket.on('position update', (time, speed, location)=>{
+			console.log("insert: " + time + ", " + speed + "," + location);
+			//update firebase
+			activeDriversWriter.updateLocation(loggedInUser, location);
 		    location = JSON.parse(location);
 				trafficDataTable.insert({
 			    user:loggedInUser,
@@ -164,9 +169,7 @@ var listener = function(io, rethinkdbConnection){
 			    speed,
 			    location: r.point(location.longitude, location.latitude)
 			}).run(rethinkdbConnection);
-		  	console.log("insert: " + time + ", " + speed + "," + location);
 
-			//update firebase
 
 		});
 
