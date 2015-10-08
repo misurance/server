@@ -6,7 +6,7 @@ module.exports = {
     var location = {
      location : location
    };
-   console.log('Updating location: ' + JSON.stringify(event));
-   ref.child(userId).child(userId).update(event);
+   console.log('Updating location: ' + JSON.stringify(location));
+   ref.child(userId).update(location);
   }
 };

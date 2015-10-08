@@ -159,6 +159,9 @@ var listener = function(io, rethinkdbConnection){
 		*/
 
 		socket.on('position update', (time, speed, location)=>{
+			console.log("insert: " + time + ", " + speed + "," + location);
+			//update firebase
+			activeDriversWriter.updateLocation(loggedInUser, location);
 		    location = JSON.parse(location);
 				trafficDataTable.insert({
 			    user:loggedInUser,
@@ -168,10 +171,8 @@ var listener = function(io, rethinkdbConnection){
 			    speed,
 			    location: r.point(location.longitude, location.latitude)
 			}).run(rethinkdbConnection);
-		  	console.log("insert: " + time + ", " + speed + "," + location);
 
-			//update firebase
-			activeDriversWriter.updateLocation(loggedInUser, location);
+
 		});
 
 		socket.on('emergency brake', (time, severity)=>{
