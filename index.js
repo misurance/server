@@ -4,6 +4,8 @@ var io = require('socket.io')(http);
 
 require('./api')(app);
 
+app.use(express.static('public'));
+
 app.get('/', function(req, res){
     res.send('<h1>Hello world</h1>');
   });
