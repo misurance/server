@@ -62,9 +62,11 @@ var rethinkToRxStream = function(promise)
 		   {
 		   	return Rx.Observable.create((obs)=>
 	  			{
-	  				x.each((err, item)=>{
-	  					obs.onNext(item.new_val || item);
-	  				});
+	  				x.each(
+	  					(err, item)=>{
+	  						obs.onNext(item.new_val || item);
+	  					},
+	  					() => obs.onCompleted());
 	  				return function(){};
 	  			});
 		   });
@@ -81,9 +83,12 @@ var listener = function(io, rethinkdbConnection){
 		var loggedInUser = null;
 		var currentRide = null;
 
+		var stateChangesSubscription;
+		var premiumChangesSubscription;
+
 	  socket.on('start driving', (username, rideId)=>{
 		loggedInUser = username;
-		feedWriter.write(username, 'Drive started');
+		feedWriter.stateChanged(username, 'Drive started');
 		currentRide = rideId;
 		var trafficStream = rethinkToRxStream(trafficDataTable
 		  	.filter({rideId:currentRide})
@@ -101,18 +106,12 @@ var listener = function(io, rethinkdbConnection){
 						return {
 							event: event,
 							speedLimit: maxSpeed,
-							isExceedingLimit: data.event.speed > data.speedLimit
+							isExceedingLimit: event.speed > maxSpeed
 						};
 					}));
-			}).share();
-
-		var speedLimitStateChanges = speedLimitMonitor
-			.distinctUntilChanged(data => data.isExceedingLimit)
-			.subscribe(data => {
-				feedWriter.stateChanged(
-					username, 
-					data.isExceedingLimit ? 'Exceeded speed limit' : 'Driving within speed limit');
-			});
+			})
+			.do((x) => console.log("SpeedLimit event: " + x))
+			.share();
 
 		var speedLimitScore = speedLimitMonitor
 			.map(data => data.isExceedingLimit ? data.event.speed - data.speedLimit : 0)
@@ -121,7 +120,7 @@ var listener = function(io, rethinkdbConnection){
   	 	var nearbyAccidentsMonitor = trafficStream
 			.filter(x=>x.eventType === "position")
 			.do((x)=>console.log("got position item:"+ x))
-			.sample(10 * 1000)
+			.sample(10000)
 			.flatMap(x=>{
 				return rethinkToRxStream(accidentsTable
 						.map(function(acc) { return { 
@@ -135,26 +134,25 @@ var listener = function(io, rethinkdbConnection){
 					.do((x) => console.log("Nearby accidents score: " + x));
 			}).share();
 
+		var speedLimitStateChanges = speedLimitMonitor
+			.distinctUntilChanged(data => data.isExceedingLimit)
+			.map(x => x.isExceedingLimit ? 'Exceeded speed limit' : 'Driving within speed limit');
+
 		var nearbyAccidentsChanges = nearbyAccidentsMonitor
 			.distinctUntilChanged()
-			.subscribe(data => {
-				feedWriter.stateChanged(username, data > 0 ? 'Entering accident-prone area' : 'Leaving accident-prone area');
-			});
+			.map(x => x > 0 ? 'Entering accident-prone area' : 'Leaving accident-prone area');
 
-		var nearbyAccidentsPremiumChanges = nearbyAccidentsMonitor
-			.merge(speedLimitMonitor)
+		stateChangesSubscription = Rx.Observable.merge(speedLimitStateChanges, nearbyAccidentsChanges)
+			.subscribe(state => feedWriter.stateChanged(username, state))
+
+		premiumChangesSubscription = Rx.Observable.merge(nearbyAccidentsMonitor, speedLimitScore)
 			.scan((prev, curr) => prev + curr)
 			.do((x) => console.log("Updating premium: " + x))
 			.subscribe(function(rideScore){
 				feedWriter.updatePremium(username, rideScore);
-			});
+			},
+			ex => console.log(ex));
 	  });
-
-		/* TODO:
-		 * unsubscribe when client disconnects
-		 * merge both observables to calculate the premium
-		 * send premium to firebase
-		*/
 
 		socket.on('position update', (time, speed, location)=>{
 		    location = JSON.parse(location);
@@ -183,7 +181,8 @@ var listener = function(io, rethinkdbConnection){
 		});
 
 		socket.on('disconnect', function () {
-			
+			stateChangesSubscription.dispose();
+			premiumChangesSubscription.dispose();
 		});
 
 	});

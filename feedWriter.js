@@ -13,6 +13,7 @@ module.exports = {
   },
 
   stateChanged: function(userId, newState) {
+    var date = new Date();
     var event = {
       time: date.getHours() + ':' + date.getMinutes(),
       newState: newState
