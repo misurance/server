@@ -3,7 +3,6 @@ var Rx = require('rx');
 var fetch = require("node-fetch");
 var _ = require("underscore");
 var geoutil = require('geoutil');
-var Firebase = require('firebase');
 
 var speedLimitByHighwayType = {
 	motorway: 110,
@@ -114,10 +113,12 @@ var listener = function(io, rethinkdbConnection){
 		  					 		}));
 
 		  					 }).subscribe((data)=>{
-		  					 	console.log("Current speed: " + data.event.speed + ", limit: " + data.speedLimit);
 		  					 	var score = (data.event.speed > data.speedLimit) ? data.speedLimit - data.event.speed : 0;
-		  					 	
-		  					 	console.log("Speed limit score: " + score);
+		  					 	console.log( { 
+		  					 		currentSpeed: data.event.speed,
+		  					 	 	speedLimit: data.speedLimit,
+		  					 	 	score: score
+		  					 	 });
 		  					 },
 		  					 (ex)=> {
 		  					 	console.log("error");
