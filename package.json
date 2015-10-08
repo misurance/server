@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/misurance/server",
   "dependencies": {
+    "braintree": "^1.29.0",
     "express": "^4.13.3",
     "koa.io": "0.0.3",
     "rethinkdb": "^2.1.1",
