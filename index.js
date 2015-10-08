@@ -5,14 +5,14 @@ var io = require('socket.io')(http);
 var bodyParser = require('body-parser');
 var r = require('rethinkdb');
 var listener = require("./dataListener");
-
+// require('./testEvents');
 require('./api')(app);
 
 app.use(express.static('public'));
 
-app.get('/', function(req, res){
-    res.send('<h1>Hello world</h1>');
-  });
+// app.get('/', function(req, res){
+//     res.send('<h1>Hello world</h1>');
+//   });
 
 var options = {
     host: 'ec2-52-17-218-63.eu-west-1.compute.amazonaws.com',
