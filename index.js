@@ -23,11 +23,14 @@ io.on('connection', function(socket){
   var currentRide = null;
 
   var trafficDataStream = trafficDataTable
-  	.filter({ride:loggedInUser})
+  	.filter({ride:currentRide})
   	.changes().run(rethinkdbConnection);
 
   Rx.Node.fromStream(trafficDataStream)
+  	//.map()
+  	//.scan()
   	.subscribe((x)=>{
+  		
   		console.log(x);
   	});
   
@@ -45,7 +48,8 @@ io.on('connection', function(socket){
 		    time,
 		    speed,
 		    location,
-		})
+		});
+
   });
 
   socket.on('emergency brake', (time, severity)=>{
