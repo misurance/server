@@ -33,3 +33,5 @@ node_modules
 .idea/workspace.xml
 .idea/jsLibraryMappings.xml
 .idea/watcherTasks.xml
+
+public/jspm_packages
