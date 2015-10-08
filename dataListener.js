@@ -1,12 +1,67 @@
 var r = require('rethinkdb');
 var Rx = require('rx');
+var fetch = require("node-fetch");
+var _ = require("underscore");
+var geoutil = require('geoutil');
+var Firebase = require('firebase');
 
-var rethinkToRxStream = function(promise)
+var highwaySpeeds = {
+
+};
+
+
+var baseUrl = "http://overpass.osm.rambler.ru/cgi/interpreter?data=";
+
+var findClosestNode = function(lon, lat, nodes)
+{
+	return Rx.Observable.fromArray(nodes)
+			.minBy(x=>geoutil.pointDistance([lon,lat],[x.lon, x.lat]))
+			.toPromise();
+}
+
+var getMaxSpeed = _.memoize(function(lon, lat){
+	var bbox = [ lat - .0002, lon - .0002, lat + .0002, lon + .0002];
+
+	var data = "[out:json];way(" + bbox.join(",") + ");(._;>;);out;";
+	var url = baseUrl + encodeURIComponent(data);
+	console.log(url);
+
+	return fetch(url).then(res => res.json())
+	    .then(data =>{
+	    	return findClosestNode(lon, lat, data.elements.filter(x=>x.type==="node")).then(
+	    		closestNode => {
+	    			closestNode =closestNode[0];
+	    			var way = data.elements.filter(x=>x.type === "way")
+	    						 .filter(x=> x.id === closestNode.id || (x.nodes && x.nodes.indexOf(closestNode.id) !== -1))[0];
+	    			
+	    			if (way.tags.maxspeed)
+	    			{
+	    				return maxspeed;
+	    			}
+
+	    			if (way.tags.highway)
+	    			{
+	    				return highwaySpeeds[way.tags.highway] || 50;
+	    			}
+
+	    			return 50;
+	    		});
+	    	
+
+	    });
+});
+
+// function fetchObs()
+// {
+// 	return Rx.Observable.fromPromise(fetch.apply(null,arguments).then(x=>x.text()));
+// }
+
+
+function rethinkToRxStream(promise)
 {
 	return Rx.Observable.fromPromise(promise)
 		   .flatMap((x)=>
 		   {
-		   	console.log(x);
 		   	return Rx.Observable.create((obs)=>
 	  			{
 	  				x.each((err, item)=>{
@@ -37,9 +92,26 @@ var listener = function(io, rethinkdbConnection){
 		  	.filter({rideId:currentRide})
 		  	.changes().run(rethinkdbConnection)).share();
 
+	  	 var speedScore = trafficStream
+		  					 .filter(x=>x.eventType === "position")
+		  					 .sample(1000)
+		  					 .combineLatest(Rx.Observable.interval(1000), (a, b) => a)
+		  					 .do(x=> {console.log("speed stream:" + x)})
+		  					 .flatMap((event)=>{
+		  					 	console.log(event.location.coordinates);
+		  					 	return Rx.Observable.defer(() => getMaxSpeed(event.location.coordinates[0], event.location.coordinates[1]));
+
+		  					 }).subscribe((data)=>{
+		  					 	console.log(data);
+		  					 	var rawResult = GeoJSON.parse(data, {Point: ['lat', 'lng']});
+		  					 	console.log(rawResult);
+		  					 },
+		  					 (ex)=> {
+		  					 	console.log("error");
+		  					 	console.log(ex);
+		  					 });
+
 		  var crashesScore = trafficStream
-		  					 .do(x=>console.log(x))
-		  					 .do((x)=>console.log("got item:"+ x.eventType ) )
 		  					 .filter(x=>x.eventType === "position")
 		  					 .do((x)=>console.log("got position item:"+ x))
 		  					 .throttle(5000)
