@@ -1,9 +1,25 @@
-html, body {
+html, body,#container,.app-container {
 	height: 100%;
 	margin: 0;
 	padding: 0;
 }
 
-#map {
-	height: 100%;
+.app-container {
+	display:flex;
+	flex-direction: row;
+	align-items: stretch;
+
+}
+.map-container{
+	display:flex;
+	align-items: stretch;
+	flex:3;
+}
+
+.feed-container{
+	display:inline-block;
+	flex:1;
+}
+#map{
+flex:1;
 }
