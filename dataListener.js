@@ -5,8 +5,13 @@ var _ = require("underscore");
 var geoutil = require('geoutil');
 var Firebase = require('firebase');
 
-var highwaySpeeds = {
-
+var speedLimitByHighwayType = {
+	motorway: 110,
+	trunk: 100,
+	primary: 90,
+	secondary: 70,
+	tertiary: 60,
+	residential: 50
 };
 
 
@@ -41,7 +46,7 @@ var getMaxSpeed = _.memoize(function(lon, lat){
 
 	    			if (way.tags.highway)
 	    			{
-	    				return highwaySpeeds[way.tags.highway] || 50;
+	    				return speedLimitByHighwayType[way.tags.highway] || 50;
 	    			}
 
 	    			return 50;
@@ -99,12 +104,20 @@ var listener = function(io, rethinkdbConnection){
 		  					 .do(x=> {console.log("speed stream:" + x)})
 		  					 .flatMap((event)=>{
 		  					 	console.log(event.location.coordinates);
-		  					 	return Rx.Observable.defer(() => getMaxSpeed(event.location.coordinates[0], event.location.coordinates[1]));
+		  					 	return Rx.Observable.defer(() => 
+		  					 		getMaxSpeed(event.location.coordinates[0], event.location.coordinates[1])
+		  					 		.then(maxSpeed => {
+		  					 			return {
+		  					 				event: event,
+		  					 				speedLimit: maxSpeed
+		  					 			};
+		  					 		}));
 
 		  					 }).subscribe((data)=>{
-		  					 	console.log(data);
-		  					 	var rawResult = GeoJSON.parse(data, {Point: ['lat', 'lng']});
-		  					 	console.log(rawResult);
+		  					 	console.log("Current speed: " + data.event.speed + ", limit: " + data.speedLimit);
+		  					 	var score = (data.event.speed > data.speedLimit) ? data.speedLimit - data.event.speed : 0;
+		  					 	
+		  					 	console.log("Speed limit score: " + score);
 		  					 },
 		  					 (ex)=> {
 		  					 	console.log("error");
