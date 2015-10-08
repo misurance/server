@@ -92,7 +92,7 @@ var listener = function(io, rethinkdbConnection){
 
 	  socket.on('start driving', (username, rideId)=>{
 	  	 loggedInUser = username;
-			 feedWriter.write(username, 'Drive started');
+		 feedWriter.write(username, 'Drive started');
 	  	 currentRide = rideId;
 	  	 var trafficStream = rethinkToRxStream(trafficDataTable
 		  	.filter({rideId:currentRide})
@@ -115,12 +115,19 @@ var listener = function(io, rethinkdbConnection){
 		  					 		}));
 
 		  					 }).subscribe((data)=>{
-		  					 	var score = (data.event.speed > data.speedLimit) ? data.speedLimit - data.event.speed : 0;
-		  					 	console.log( { 
+		  					 	var premiumChange = (data.event.speed > data.speedLimit) ? data.speedLimit - data.event.speed : 0;
+		  					 	console.log({ 
 		  					 		currentSpeed: data.event.speed,
 		  					 	 	speedLimit: data.speedLimit,
-		  					 	 	score: score
+		  					 	 	premiumChange: premiumChange
 		  					 	 });
+
+		  					 	if (premiumChange > 0) {
+		  					 		feedWriter.write(username, 'Exceeding speed limit', premiumChange);
+		  					 	}
+		  					 	else {
+		  					 		feedWriter.write(username, 'Driving within speed limit');
+		  					 	}
 		  					 },
 		  					 (ex)=> {
 		  					 	console.log("error");
@@ -139,8 +146,13 @@ var listener = function(io, rethinkdbConnection){
 		  					 		 .run(rethinkdbConnection))
 		  					 	     .map(e=>parseInt(e.severity));
 		  					 }).scan((a,b)=> a+b)
-	  						  .subscribe(function(score){
-	  						  	console.log(score);
+	  						  .subscribe(function(premiumChange){
+	  						  	if (premiumChange > 0) {
+		  					 		feedWriter.write(username, 'Located in an accident-prone area', premiumChange);
+	  						  	}
+	  						  	else {
+	  						  		feedWriter.write(username, 'Located in a safe area');
+	  						  	}
 	  						  });
 	  });
 
