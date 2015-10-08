@@ -2,13 +2,12 @@ var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
 
-app.get('/', function(req, res){
-  res.send('<h1>Hello world</h1>');
-});
-
-
+require('./api')(app);
 
 var io = require('socket.io')(process.env.PORT || 3000);
+app.get('/', function(req, res){
+    res.send('<h1>Hello world</h1>');
+  });
 
 
 var r = require('rethinkdb');
@@ -45,7 +44,7 @@ io.on('connection', function(socket){
 
   		console.log(x);
   	});
-  
+
 
   socket.on('start driving', (username, rideId)=>{
   	 loggedInUser = username;
@@ -55,7 +54,7 @@ io.on('connection', function(socket){
   socket.on('position update', (time, speed, location)=>{
   		trafficDataTable.insert({
 		    user:loggedInUser,
-		    eventType: 'position', 
+		    eventType: 'position',
 		    rideId,
 		    time,
 		    speed,
