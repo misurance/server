@@ -30,8 +30,7 @@ r.connect(options).then(function(connection) {
 					var accident = {
 						id: row[0],
 						severity: row[22],
-						lon: coordinates[0],
-						lat: coordinates[1],
+						location: r.point(coordinates[0],coordinates[1]),
 					};
 
 					r.db('misurance').table('accidents').insert(accident).run(connection)
