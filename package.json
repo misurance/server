@@ -23,6 +23,7 @@
     "koa.io": "0.0.3",
     "rethinkdb": "^2.1.1",
     "rx": "^4.0.0",
+    "rx-node": "^1.0.1",
     "socket.io": "^1.3.7"
   },
   "devDependencies": {
