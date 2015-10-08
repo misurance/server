@@ -1,22 +1,23 @@
-var koa = require('koa.io');
+var io = require('socket.io')(process.env.PORT || 5000);
 
-var app = koa();
+io.on('connection', function(socket){
+  var loggedInUser = null;
+  socket.on('login', (username)=>
+    loggedInUser = username
+  );
 
-// middleware for koa
-app.use(function*() {
+  socket.on('location update', (time,location)=>{
+
+  });
+
+  socket.on('speed update', (time, speed)=>{
+
+  });
+
+  socket.on('emergency brake', (time, severity)=>{
+
+  });
+
+
+
 });
-
-
-// middleware for scoket.io's connect and disconnect
-app.io.use(function* (next) {
-  // on connect
-  yield* next;
-  // on disconnect
-});
-
-// router for socket event
-app.io.route('LocationUpdate', function* () {
-
-});
-
-app.listen(3000);
