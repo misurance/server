@@ -32,7 +32,7 @@ var getMaxSpeed = _.memoize(function(lon, lat){
 	console.log(url);
 
 	return fetch(url).then(res => res.json())
-	    .then(data =>{
+	    .then(data => {
 	    	return findClosestNode(lon, lat, data.elements.filter(x=>x.type==="node")).then(
 	    		closestNode => {
 	    			closestNode =closestNode[0];
@@ -51,15 +51,8 @@ var getMaxSpeed = _.memoize(function(lon, lat){
 
 	    			return 50;
 	    		});
-
-
 	    });
 });
-
-// function fetchObs()
-// {
-// 	return Rx.Observable.fromPromise(fetch.apply(null,arguments).then(x=>x.text()));
-// }
 
 
 var rethinkToRxStream = function(promise)
@@ -82,82 +75,89 @@ var accidentsTable = r.table('accidents');
 
 
 var listener = function(io, rethinkdbConnection){
+
 	io.on('connection', function(socket){
 		var score = 0;
-
-	  var loggedInUser = null;
-	  var currentRide = null;
-
-
+		var loggedInUser = null;
+		var currentRide = null;
 
 	  socket.on('start driving', (username, rideId)=>{
-	  	 loggedInUser = username;
-		 feedWriter.write(username, 'Drive started');
-	  	 currentRide = rideId;
-	  	 var trafficStream = rethinkToRxStream(trafficDataTable
+		loggedInUser = username;
+		feedWriter.write(username, 'Drive started');
+		currentRide = rideId;
+		var trafficStream = rethinkToRxStream(trafficDataTable
 		  	.filter({rideId:currentRide})
 		  	.changes().run(rethinkdbConnection)).share();
 
-	  	 var speedScore = trafficStream
-		  					 .filter(x=>x.eventType === "position")
-		  					 .sample(1000)
-		  					 .combineLatest(Rx.Observable.interval(1000), (a, b) => a)
-		  					 .do(x=> {console.log("speed stream:" + x)})
-		  					 .flatMap((event)=>{
-		  					 	console.log(event.location.coordinates);
-		  					 	return Rx.Observable.defer(() =>
-		  					 		getMaxSpeed(event.location.coordinates[0], event.location.coordinates[1])
-		  					 		.then(maxSpeed => {
-		  					 			return {
-		  					 				event: event,
-		  					 				speedLimit: maxSpeed
-		  					 			};
-		  					 		}));
+		var speedLimitMonitor = trafficStream
+			.filter(x=>x.eventType === "position")
+			.sample(1000)
+			.do(x => {console.log("speed stream:" + x)})
+			.flatMap((event)=>{
+				console.log(event.location.coordinates);
+				return Rx.Observable.defer(() =>
+					getMaxSpeed(event.location.coordinates[0], event.location.coordinates[1])
+					.then(maxSpeed => {
+						return {
+							event: event,
+							speedLimit: maxSpeed,
+							isExceedingLimit: data.event.speed > data.speedLimit
+						};
+					}));
+			}).share();
 
-		  					 }).subscribe((data)=>{
-		  					 	var premiumChange = (data.event.speed > data.speedLimit) ? data.speedLimit - data.event.speed : 0;
-		  					 	console.log({ 
-		  					 		currentSpeed: data.event.speed,
-		  					 	 	speedLimit: data.speedLimit,
-		  					 	 	premiumChange: premiumChange
-		  					 	 });
+		var speedLimitStateChanges = speedLimitMonitor
+			.distinctUntilChanged(data => data.isExceedingLimit)
+			.subscribe(data => {
+				feedWriter.stateChanged(
+					username, 
+					data.isExceedingLimit ? 'Exceeded speed limit' : 'Driving within speed limit');
+			});
 
-		  					 	if (premiumChange > 0) {
-		  					 		feedWriter.write(username, 'Exceeding speed limit', premiumChange);
-		  					 	}
-		  					 	else {
-		  					 		feedWriter.write(username, 'Driving within speed limit');
-		  					 	}
-		  					 },
-		  					 (ex)=> {
-		  					 	console.log("error");
-		  					 	console.log(ex);
-		  					 });
+		var speedLimitScore = speedLimitMonitor
+			.map(data => data.isExceedingLimit ? data.event.speed - data.speedLimit : 0)
+			.do((x) => console.log("Speed limit score: " + x));
 
-		  var crashesScore = trafficStream
-		  					 .filter(x=>x.eventType === "position")
-		  					 .do((x)=>console.log("got position item:"+ x))
-		  					 .throttle(5000)
-		  					 .flatMap(x=>{
-		  					 	return rethinkToRxStream(
-		  					 		accidentsTable.map(function(acc) { return { severity:acc('severity'),
-		  					 		 distance:acc('location').distance(x.location) }})
-		  					 		 .filter(r.row('distance').le(100))
-		  					 		 .run(rethinkdbConnection))
-		  					 	     .map(e=>parseInt(e.severity));
-		  					 }).scan((a,b)=> a+b)
-	  						  .subscribe(function(premiumChange){
-	  						  	if (premiumChange > 0) {
-		  					 		feedWriter.write(username, 'Located in an accident-prone area', premiumChange);
-	  						  	}
-	  						  	else {
-	  						  		feedWriter.write(username, 'Located in a safe area');
-	  						  	}
-	  						  });
+  	 	var nearbyAccidentsMonitor = trafficStream
+			.filter(x=>x.eventType === "position")
+			.do((x)=>console.log("got position item:"+ x))
+			.sample(10 * 1000)
+			.flatMap(x=>{
+				return rethinkToRxStream(accidentsTable
+						.map(function(acc) { return { 
+							severity:acc('severity'),
+						 	distance:acc('location').distance(x.location) }
+						})
+						.filter(r.row('distance').le(100))
+						.run(rethinkdbConnection))
+					.map(e => parseInt(e.severity) * 10)
+					.sum()
+					.do((x) => console.log("Nearby accidents score: " + x));
+			}).share();
+
+		var nearbyAccidentsChanges = nearbyAccidentsMonitor
+			.distinctUntilChanged()
+			.subscribe(data => {
+				feedWriter.stateChanged(username, data > 0 ? 'Entering accident-prone area' : 'Leaving accident-prone area');
+			});
+
+		var nearbyAccidentsPremiumChanges = nearbyAccidentsMonitor
+			.merge(speedLimitMonitor)
+			.scan((prev, curr) => prev + curr)
+			.do((x) => console.log("Updating premium: " + x))
+			.subscribe(function(rideScore){
+				feedWriter.updatePremium(username, rideScore);
+			});
 	  });
 
-	  socket.on('position update', (time, speed, location)=>{
-	  		trafficDataTable.insert({
+		/* TODO:
+		 * unsubscribe when client disconnects
+		 * merge both observables to calculate the premium
+		 * send premium to firebase
+		*/
+
+		socket.on('position update', (time, speed, location)=>{
+				trafficDataTable.insert({
 			    user:loggedInUser,
 			    eventType: 'position',
 			    rideId: currentRide,
@@ -168,17 +168,21 @@ var listener = function(io, rethinkdbConnection){
 
 			//update firebase
 
-	  });
+		});
 
-	  socket.on('emergency brake', (time, severity)=>{
-	  		//update rethinkdb
-	  		//update firebase on break
-	  });
+		socket.on('emergency brake', (time, severity)=>{
+				//update rethinkdb
+				//update firebase on break
+		});
 
-	  socket.on('stop driving', (rideId)=>{
-	  		//update rethinkdb
-	  		//update firebase current speed
-	  });
+		socket.on('stop driving', (rideId)=>{
+				//update rethinkdb
+				//update firebase current speed
+		});
+
+		socket.on('disconnect', function () {
+			
+		});
 
 	});
 }
