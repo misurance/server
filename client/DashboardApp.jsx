@@ -8,9 +8,7 @@ const DashboardApp = React.createClass({
         <div className='map-container'>
         <Map/>
         </div>
-        <div className='feed-container'>
-        <Feed/>
-        </div>
+        
       </div>
     )
   }
