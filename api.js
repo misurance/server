@@ -26,10 +26,14 @@ module.exports = function(app){
       lastName: "anonymous",
       paymentMethodNonce: req.body.nonce
     }, function (err, result) {
-      console.log(result);
-      customersStorage.push({id: req.body.userId, braintreeDetails: result.customer})
+      if (err) {
+        res.status(500).send(err);
+      }
+      else {
+        customersStorage.push({id: req.body.userId, braintreeDetails: result.customer})
+        res.send(result);
+      }
     });
-    res.end();
   });
 
   app.post("/api/transaction", function (req, res) {
@@ -39,9 +43,12 @@ module.exports = function(app){
       amount: req.body.amount,
       customerId: customer.braintreeDetails.id
     }, function (err, result) {
-      console.log(err);
-      console.log(result)
+      if (err) {
+        res.status(500).send(err);
+      }
+      else {
+        res.send(result);
+      }
     });
-    res.end();
   });
 };
