@@ -3,6 +3,7 @@ var Rx = require('rx');
 var fetch = require("node-fetch");
 var _ = require("underscore");
 var geoutil = require('geoutil');
+var feedWriter = require('./feedWriter');
 
 var speedLimitByHighwayType = {
 	motorway: 110,
@@ -37,7 +38,7 @@ var getMaxSpeed = _.memoize(function(lon, lat){
 	    			closestNode =closestNode[0];
 	    			var way = data.elements.filter(x=>x.type === "way")
 	    						 .filter(x=> x.id === closestNode.id || (x.nodes && x.nodes.indexOf(closestNode.id) !== -1))[0];
-	    			
+
 	    			if (way.tags.maxspeed)
 	    			{
 	    				return maxspeed;
@@ -50,7 +51,7 @@ var getMaxSpeed = _.memoize(function(lon, lat){
 
 	    			return 50;
 	    		});
-	    	
+
 
 	    });
 });
@@ -61,7 +62,7 @@ var getMaxSpeed = _.memoize(function(lon, lat){
 // }
 
 
-function rethinkToRxStream(promise)
+var rethinkToRxStream = function(promise)
 {
 	return Rx.Observable.fromPromise(promise)
 		   .flatMap((x)=>
@@ -87,10 +88,11 @@ var listener = function(io, rethinkdbConnection){
 	  var loggedInUser = null;
 	  var currentRide = null;
 
-	  
+
 
 	  socket.on('start driving', (username, rideId)=>{
 	  	 loggedInUser = username;
+			 feedWriter.write(username, 'Drive started');
 	  	 currentRide = rideId;
 	  	 var trafficStream = rethinkToRxStream(trafficDataTable
 		  	.filter({rideId:currentRide})
@@ -103,7 +105,7 @@ var listener = function(io, rethinkdbConnection){
 		  					 .do(x=> {console.log("speed stream:" + x)})
 		  					 .flatMap((event)=>{
 		  					 	console.log(event.location.coordinates);
-		  					 	return Rx.Observable.defer(() => 
+		  					 	return Rx.Observable.defer(() =>
 		  					 		getMaxSpeed(event.location.coordinates[0], event.location.coordinates[1])
 		  					 		.then(maxSpeed => {
 		  					 			return {
@@ -140,15 +142,12 @@ var listener = function(io, rethinkdbConnection){
 	  						  .subscribe(function(score){
 	  						  	console.log(score);
 	  						  });
-		  	
-
-		
 	  });
 
 	  socket.on('position update', (time, speed, location)=>{
 	  		trafficDataTable.insert({
 			    user:loggedInUser,
-			    eventType: 'position', 
+			    eventType: 'position',
 			    rideId: currentRide,
 			    time,
 			    speed,
