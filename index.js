@@ -5,7 +5,7 @@ var io = require('socket.io')(http);
 var bodyParser = require('body-parser');
 var r = require('rethinkdb');
 var listener = require("./dataListener");
-
+// require('./testEvents');
 require('./api')(app);
 
 app.use(express.static('public'));
