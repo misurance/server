@@ -49,6 +49,5 @@
       "babel-runtime": "npm:babel-runtime@^5.8.24",
       "core-js": "npm:core-js@^1.1.4"
     }
->>>>>>> 4f6d421a428195caf12b04fc21f9b690508a6f9f
   }
 }
