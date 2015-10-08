@@ -1,4 +1,4 @@
-/** @jsx React.DOM */
+\/** @jsx React.DOM */
 var TodoList3 = React.createClass({
   render: function() {
     var _this = this;
