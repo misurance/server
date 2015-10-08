@@ -21,34 +21,44 @@ module.exports = function(app){
   });
 
   app.post("/api/create_customer", function (req, res) {
-    gateway.customer.create({
-      firstName: "anonymous",
-      lastName: "anonymous",
-      paymentMethodNonce: req.body.nonce
-    }, function (err, result) {
-      if (err) {
-        res.status(500).send(err);
-      }
-      else {
-        customersStorage.push({id: req.body.userId, braintreeDetails: result.customer})
-        res.send(result);
-      }
-    });
+    try {
+      gateway.customer.create({
+        firstName: "anonymous",
+        lastName: "anonymous",
+        paymentMethodNonce: req.body.nonce
+      }, function (err, result) {
+        if (err) {
+          res.status(500).send(err);
+        }
+        else {
+          customersStorage.push({id: req.body.userId, braintreeDetails: result.customer})
+          res.send(result);
+        }
+      });
+    }
+    catch (e) {
+      res.status(500).send(e);
+    }
   });
 
   app.post("/api/transaction", function (req, res) {
-    var customer = customersStorage.filter((customer) => customer.id == req.body.userId)[0];
+    try {
+      var customer = customersStorage.filter((customer) => customer.id == req.body.userId)[0];
 
-    gateway.transaction.sale({
-      amount: req.body.amount,
-      customerId: customer.braintreeDetails.id
-    }, function (err, result) {
-      if (err) {
-        res.status(500).send(err);
-      }
-      else {
-        res.send(result);
-      }
-    });
+      gateway.transaction.sale({
+        amount: req.body.amount,
+        customerId: customer.braintreeDetails.id
+      }, function (err, result) {
+        if (err) {
+          res.status(500).send(err);
+        }
+        else {
+          res.send(result);
+        }
+      });
+    }
+    catch (e) {
+      res.status(500).send(e);
+    }
   });
 };
