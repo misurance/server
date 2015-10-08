@@ -6,10 +6,10 @@ module.exports = {
     var date = new Date();
     var event = {
       type: 'updatePremium',
-      time: date.getHours() + ':' + date.getMinutes(),
+      time: (date.getHours() < 10 ? '0' : '') + date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes(),
       premium: rideScore,
     };
-    console.log('updatePremium: ' + JSON.stringify(event));
+    // console.log('updatePremium: ' + JSON.stringify(event));
     ref.child(userId).child('feed').push(event);
   },
 
@@ -17,11 +17,11 @@ module.exports = {
     var date = new Date();
     var event = {
       type:'stateChanged',
-      time: date.getHours() + ':' + date.getMinutes(),
+      time: (date.getHours() < 10 ? '0' : '') + date.getHours() + ':' + (date.getMinutes() < 10 ? '0' : '') + date.getMinutes(),
       newState: newState
     };
 
-    console.log('stateChanged: ' + JSON.stringify(event));
+    // console.log('stateChanged: ' + JSON.stringify(event));
     ref.child(userId).child('feed').push(event);
   }
 };
