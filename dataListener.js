@@ -159,9 +159,9 @@ var listener = function(io, rethinkdbConnection){
 		socket.on('position update', (time, speed, location)=>{
 			console.log("insert: " + time + ", " + speed + "," + location);
 			//update firebase
+			location = JSON.parse(location);
 			activeDriversWriter.updateLocation(loggedInUser, location);
-		    location = JSON.parse(location);
-				trafficDataTable.insert({
+		    	trafficDataTable.insert({
 			    user:loggedInUser,
 			    eventType: 'position',
 			    rideId: currentRide,
@@ -184,8 +184,8 @@ var listener = function(io, rethinkdbConnection){
 		});
 
 		socket.on('disconnect', function () {
-			stateChangesSubscription.dispose();
-			premiumChangesSubscription.dispose();
+			stateChangesSubscription && stateChangesSubscription.dispose();
+			premiumChangesSubscription && premiumChangesSubscription.dispose();
 		});
 
 	});
