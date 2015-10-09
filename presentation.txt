@@ -1,0 +1,23 @@
+Car insurance pricing is almost flat. That's probably bad for you - if your car's at rest 6 days a week, and you're a super-safe driver, you shouldn't pay as much as that guy who's driving to work every day like some maniac. 
+We offer a pay-as-you-go car insurance using a real-time risk analysis algorithm, combined with hardware that's plugged into your car's computer, to calculate your personalized premium for every ride.
+
+Data
+----
+All accidents in Israel since 1/2014 (12500), with exact location and severity level, from CBS
+Speed limits, from OpenStreetMap
+Location, from phone GPS
+Vehicle speed, from OBD
+Emergency brakes, from OBD (to be implemented)
+
+Technologies
+------------
+React			Rendering the web UI
+React Native 	Rendering the Android UI
+RethinkDB		Persistency for telemetry data + reactive capabilities, storing historic accidents (from CBS)
+Firebase		Simple push capabilities for both Android and web UI
+NodeJS			Server side, receiving telemetry data + pushing data 
+ODB				Car computer jack (onboard diagnostics) + simulator
+socket.io 		Real-time telemetry reporting for mobile app
+Rx				Skipping lots of state management
+Open StreetMap	Speed limits
+Google Maps		Web UI
