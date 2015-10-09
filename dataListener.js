@@ -119,7 +119,7 @@ var listener = function(io, rethinkdbConnection){
 							};
 						}));
 				})
-				.do((x) => console.log("SpeedLimit event: " + x))
+				.do((x) => console.log("SpeedLimit event: " + JSON.stringify(x)))
 				.share();
 
 			var speedLimitScore = speedLimitMonitor
