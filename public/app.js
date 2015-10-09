@@ -19697,7 +19697,7 @@
 	    });
 	  },
 	  updateMarker: function updateMarker(key, lat, lng) {
-	    if (!map) return;
+	    if (!map || !lat || !lng) return;
 	    console.log(key + ': ' + lat + ',' + lng);
 	    if (this.state.drivers[key]) {
 	      this.state.drivers[key].setPosition({ lat: lat, lng: lng });
@@ -19716,7 +19716,6 @@
 	        map: map,
 	        title: key,
 	        icon: image
-
 	      });
 	    }
 	  },
