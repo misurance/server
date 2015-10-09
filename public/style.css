@@ -18,7 +18,6 @@ html, body,#container,.app-container,.dashboard {
 	display:flex;
 	align-items: stretch;
 	flex:3;
-	z-index: -10;
 }
 
 .feed-container{
