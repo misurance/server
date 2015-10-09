@@ -6,6 +6,8 @@ var geoutil = require('geoutil');
 var feedWriter = require('./feedWriter');
 var activeDriversWriter = require('./activeDriversWriter');
 
+console.log("hello nodejs");
+
 var speedLimitByHighwayType = {
 	motorway: 110,
 	trunk: 100,
@@ -97,9 +99,9 @@ var listener = function(io, rethinkdbConnection){
 			  	.changes().run(rethinkdbConnection)).share();
 
 			var timeScore = trafficStream
+				.sample(1000)
 				.map(x => {
 					var hourOfDay = new Date(x.time).getHours();
-					console.log("Hour of day: " + hourOfDay);
 					return hourOfDay < 6 ? 0.2 : 0;
 				});
 
@@ -119,69 +121,81 @@ var listener = function(io, rethinkdbConnection){
 							};
 						}));
 				})
-				.do((x) => console.log("SpeedLimit event: " + JSON.stringify(x)))
 				.share();
 
 			var speedLimitScore = speedLimitMonitor
 				.map(data => data.isExceedingLimit ? data.event.speed - data.speedLimit : 0)
-				.do((x) => console.log("Speed limit score: " + x));
-
+				
 	  	 	var nearbyAccidentsMonitor = trafficStream
 				.filter(x=>x.eventType === "position")
-				.do((x)=>console.log("got position item:"+ x))
 				.sample(10000)
 				.flatMap(x=>{
+					console.log("getting accidents data for:" + x);
+
 					return rethinkToRxStream(accidentsTable
 							.map(function(acc) { return {
 								severity:acc('severity'),
 							 	distance:acc('location').distance(x.location) }
 							})
-							.filter(r.row('distance').le(200))
+							.filter(r.row('distance').le(100))
 							.run(rethinkdbConnection))
 						.map(e => parseInt(e.severity) * 10)
 						.sum()
-						.do((x) => console.log("Nearby accidents score: " + x));
-				}).share();
+						.do((x) => console.log("Nearby accidents score: " + x))
+				})
+				.share();
 
 			var speedLimitStateChanges = speedLimitMonitor
 				.distinctUntilChanged(data => data.isExceedingLimit)
 				.map(x => x.isExceedingLimit ? 'exceeded speed limit' : 'is driving within speed limit');
-
+				
 			var nearbyAccidentsChanges = nearbyAccidentsMonitor
+				.do(x=> console.log("accident-score:" +x))
 				.distinctUntilChanged()
-				.map(x => x > 0 ? ' is entering accident-prone area' : 'is leaving accident-prone area');
+				.map(x => x > 0 ? ' is entering accident-prone area' : 'is leaving accident-prone area')
+				.do(x=> console.log("accident-message:" +x));
+
 
 			stateChangesSubscription = Rx.Observable.merge(speedLimitStateChanges, nearbyAccidentsChanges)
 				.subscribe(state => feedWriter.stateChanged(username, state))
 
 			premiumChangesSubscription = Rx.Observable.merge(nearbyAccidentsMonitor, speedLimitScore, timeScore)
 				.scan((prev, curr) => prev + curr)
-				.do((x) => console.log("Updating premium: " + x))
+				.distinctUntilChanged()
+				.do((x) => console.log(loggedInUser + "::Updating premium: " + x))
 				.subscribe(function(rideScore){
 					feedWriter.updatePremium(username, rideScore);
 				},
 				ex => console.log(ex));
 	  	});
 
+		var lastPositionUpdate = new Date();
+
 		socket.on('position update', (time, speed, location)=>{
 			if (!loggedInUser) {
 				return;
 			}
-
-			console.log("insert: " + time + ", " + speed + "," + location);			
+	
 			location = JSON.parse(location);
 
 			//update firebase
 			activeDriversWriter.updateLocation(loggedInUser, location);
 	    	
-	    	trafficDataTable.insert({
-			    user:loggedInUser,
-			    eventType: 'position',
-			    rideId: currentRide,
-			    time,
-			    speed,
-			    location: r.point(location.longitude, location.latitude)
-			}).run(rethinkdbConnection);
+	    	var localDate = new Date();
+	    	setTimeout(()=>{
+	    		if (localDate < lastPositionUpdate) return;
+	    		lastPositionUpdate = new Date();
+	    		console.log("write to rethinkd update");
+				trafficDataTable.insert({
+				    user:loggedInUser,
+				    eventType: 'position',
+				    rideId: currentRide,
+				    time,
+				    speed,
+				    location: r.point(location.longitude, location.latitude)
+				}).run(rethinkdbConnection);
+	    	}, 500);
+	    	
 		});
 
 		socket.on('emergency brake', (time, severity)=>{
