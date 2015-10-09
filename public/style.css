@@ -1,4 +1,4 @@
-html, body,#container,.app-container {
+html, body,#container,.app-container,.dashboard {
 	height: 100%;
 	margin: 0;
 	padding: 0;
@@ -10,16 +10,43 @@ html, body,#container,.app-container {
 	align-items: stretch;
 
 }
+
+.brand-logo{
+	height: 100%;
+}
 .map-container{
 	display:flex;
 	align-items: stretch;
 	flex:3;
+	    z-index: -10;
 }
 
 .feed-container{
-	display:inline-block;
+	display:flex;
+	flex-direction: column;
+	flex:1;
+	border-width: 0 1px 0 0;
+    border-color: #434343;
+    border-style: solid;
+
+}
+
+.feed{
 	flex:1;
 }
+
+.tech-container{
+	display: flex;
+	flex-direction: column;
+	flex:2;
+	align-items: center;
+}
+
+.separator{
+	height:1px;
+	background: #434343;
+}
+
 #map{
 flex:1;
 }

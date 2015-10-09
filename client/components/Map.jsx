@@ -1,5 +1,8 @@
 import React, { PropTypes } from 'react'
 import {default as Firebase} from 'firebase'
+import {default as Feed} from './Feed.jsx';
+import {default as Tech} from './Tech.jsx';
+
 var map;
 window.initMap = function() {
   map = new google.maps.Map(document.getElementById('map'), {
@@ -39,7 +42,7 @@ const Map = React.createClass({
   },
   updateMarker: function (key, lat, lng){
     if (!map || !lat || !lng) return;
-    console.log(key + ': '+lat + ',' + lng);
+    // console.log(key + ': '+lat + ',' + lng);
     if (this.state.drivers[key]) {
       this.state.drivers[key].setPosition({lat: lat, lng: lng});
     }
@@ -67,7 +70,17 @@ const Map = React.createClass({
     // console.log(driver);
     // }
     return (
-      <div id='map'>
+      <div className='app-container'>
+        <div className='feed-container'>
+          <Feed/>
+          <div className='separator'></div>
+          <Tech/>
+        </div>
+        <div className='map-container'>
+          <div id='map'>
+          </div>
+        </div>
+
       </div>
     )
   }

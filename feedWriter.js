@@ -23,5 +23,8 @@ module.exports = {
 
     // console.log('stateChanged: ' + JSON.stringify(event));
     ref.child(userId).child('feed').push(event);
+    ref.child('active').child(userId).update({
+      state: newState
+    })
   }
 };

@@ -79,22 +79,23 @@
 
 	var _componentsMapJsx2 = _interopRequireDefault(_componentsMapJsx);
 
-	var _componentsFeedJsx = __webpack_require__(159);
-
-	var _componentsFeedJsx2 = _interopRequireDefault(_componentsFeedJsx);
-
 	var DashboardApp = _react2['default'].createClass({
 	  displayName: 'DashboardApp',
 
 	  render: function render() {
 	    return _react2['default'].createElement(
 	      'div',
-	      { className: 'app-container' },
+	      { className: 'dashboard' },
 	      _react2['default'].createElement(
-	        'div',
-	        { className: 'map-container' },
-	        _react2['default'].createElement(_componentsMapJsx2['default'], null)
-	      )
+	        'nav',
+	        { className: 'deep-purple lighten-3' },
+	        _react2['default'].createElement(
+	          'div',
+	          { className: 'nav-wrapper' },
+	          _react2['default'].createElement('img', { className: 'brand-logo center ', src: 'images/logo.png' })
+	        )
+	      ),
+	      _react2['default'].createElement(_componentsMapJsx2['default'], null)
 	    );
 	  }
 	});
@@ -19656,9 +19657,17 @@
 
 	var _react2 = _interopRequireDefault(_react);
 
-	var _firebase = __webpack_require__(161);
+	var _firebase = __webpack_require__(159);
 
 	var _firebase2 = _interopRequireDefault(_firebase);
+
+	var _FeedJsx = __webpack_require__(161);
+
+	var _FeedJsx2 = _interopRequireDefault(_FeedJsx);
+
+	var _TechJsx = __webpack_require__(162);
+
+	var _TechJsx2 = _interopRequireDefault(_TechJsx);
 
 	var map;
 	window.initMap = function () {
@@ -19698,7 +19707,7 @@
 	  },
 	  updateMarker: function updateMarker(key, lat, lng) {
 	    if (!map || !lat || !lng) return;
-	    console.log(key + ': ' + lat + ',' + lng);
+	    // console.log(key + ': '+lat + ',' + lng);
 	    if (this.state.drivers[key]) {
 	      this.state.drivers[key].setPosition({ lat: lat, lng: lng });
 	    } else {
@@ -19724,7 +19733,22 @@
 	    // var driver = this.state.activeDrivers[i];
 	    // console.log(driver);
 	    // }
-	    return _react2['default'].createElement('div', { id: 'map' });
+	    return _react2['default'].createElement(
+	      'div',
+	      { className: 'app-container' },
+	      _react2['default'].createElement(
+	        'div',
+	        { className: 'feed-container' },
+	        _react2['default'].createElement(_FeedJsx2['default'], null),
+	        _react2['default'].createElement('div', { className: 'separator' }),
+	        _react2['default'].createElement(_TechJsx2['default'], null)
+	      ),
+	      _react2['default'].createElement(
+	        'div',
+	        { className: 'map-container' },
+	        _react2['default'].createElement('div', { id: 'map' })
+	      )
+	    );
 	  }
 	});
 
@@ -19733,60 +19757,6 @@
 
 /***/ },
 /* 159 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	Object.defineProperty(exports, '__esModule', {
-	  value: true
-	});
-
-	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-	var _react = __webpack_require__(2);
-
-	var _react2 = _interopRequireDefault(_react);
-
-	var Feed = _react2['default'].createClass({
-	  displayName: 'Feed',
-
-	  getInitialState: function getInitialState() {
-	    return {
-	      feedItems: []
-	    };
-	  },
-	  render: function render() {
-	    var createFeedItem = function createFeedItem(event) {
-	      return _react2['default'].createElement(
-	        'li',
-	        { key: event.key },
-	        event.time,
-	        ' ',
-	        event.message
-	      );
-	    };
-	    return _react2['default'].createElement(
-	      'ul',
-	      null,
-	      this.state.feedItems.map(createFeedItem)
-	    );
-	  }
-	});
-
-	exports['default'] = Feed;
-	module.exports = exports['default'];
-
-/***/ },
-/* 160 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
-	module.exports = __webpack_require__(4);
-
-
-/***/ },
-/* 161 */
 /***/ function(module, exports) {
 
 	/*! @license Firebase v2.3.1
@@ -20059,6 +20029,99 @@
 
 	module.exports = Firebase;
 
+
+/***/ },
+/* 160 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = __webpack_require__(4);
+
+
+/***/ },
+/* 161 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	var _react = __webpack_require__(2);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var _firebase = __webpack_require__(159);
+
+	var _firebase2 = _interopRequireDefault(_firebase);
+
+	var Feed = _react2['default'].createClass({
+	  displayName: 'Feed',
+
+	  getInitialState: function getInitialState() {
+	    return {
+	      feedItems: []
+	    };
+	  },
+	  render: function render() {
+	    var createFeedItem = function createFeedItem(event) {
+	      return _react2['default'].createElement(
+	        'li',
+	        { key: event.key },
+	        event.time,
+	        ' ',
+	        event.message
+	      );
+	    };
+	    return _react2['default'].createElement(
+	      'ul',
+	      { className: 'feed' },
+	      this.state.feedItems.map(createFeedItem)
+	    );
+	  }
+	});
+
+	exports['default'] = Feed;
+	module.exports = exports['default'];
+
+/***/ },
+/* 162 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	  value: true
+	});
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+
+	var _react = __webpack_require__(2);
+
+	var _react2 = _interopRequireDefault(_react);
+
+	var Tech = _react2['default'].createClass({
+	  displayName: 'Tech',
+
+	  render: function render() {
+	    return _react2['default'].createElement(
+	      'div',
+	      { className: 'tech-container' },
+	      _react2['default'].createElement(
+	        'h4',
+	        null,
+	        'Powered by'
+	      )
+	    );
+	  }
+	});
+
+	exports['default'] = Tech;
+	module.exports = exports['default'];
 
 /***/ }
 /******/ ]);
