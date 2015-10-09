@@ -55,7 +55,7 @@
 	var _DashboardAppJsx2 = _interopRequireDefault(_DashboardAppJsx);
 
 	var React = __webpack_require__(2);
-	var ReactDOM = __webpack_require__(160);
+	var ReactDOM = __webpack_require__(162);
 
 	ReactDOM.render(React.createElement(_DashboardAppJsx2['default'], null), document.getElementById('container'));
 
@@ -19661,11 +19661,11 @@
 
 	var _firebase2 = _interopRequireDefault(_firebase);
 
-	var _FeedJsx = __webpack_require__(161);
+	var _FeedJsx = __webpack_require__(160);
 
 	var _FeedJsx2 = _interopRequireDefault(_FeedJsx);
 
-	var _TechJsx = __webpack_require__(162);
+	var _TechJsx = __webpack_require__(161);
 
 	var _TechJsx2 = _interopRequireDefault(_TechJsx);
 
@@ -20036,15 +20036,6 @@
 
 	'use strict';
 
-	module.exports = __webpack_require__(4);
-
-
-/***/ },
-/* 161 */
-/***/ function(module, exports, __webpack_require__) {
-
-	'use strict';
-
 	Object.defineProperty(exports, '__esModule', {
 	  value: true
 	});
@@ -20062,19 +20053,50 @@
 	var Feed = _react2['default'].createClass({
 	  displayName: 'Feed',
 
+	  update: function update(snapshot) {
+	    var self = this;
+	    var index = self.state.feedItems.map(function (x) {
+	      return x.userId;
+	    }).indexOf(snapshot.key());
+	    if (index >= 0) {
+	      self.state.feedItems[index] = {
+	        userId: snapshot.key(),
+	        state: snapshot.val().state
+	      };
+	    } else {
+	      self.state.feedItems.push({
+	        userId: snapshot.key(),
+	        state: snapshot.val().state
+	      });
+	    }
+
+	    self.setState(self.state);
+	    console.log(self.state.feedItems.length);
+	  },
+
+	  componentDidMount: function componentDidMount() {
+	    var self = this;
+	    var ref = new _firebase2['default']("https://intense-inferno-8553.firebaseio.com").child('active');
+	    ref.on("child_changed", function (snapshot) {
+	      self.update(snapshot);
+	    });
+	    ref.on("child_added", function (snapshot, prevChildKey) {
+	      self.update(snapshot);
+	    });
+	  },
+
 	  getInitialState: function getInitialState() {
 	    return {
 	      feedItems: []
 	    };
 	  },
+
 	  render: function render() {
 	    var createFeedItem = function createFeedItem(event) {
 	      return _react2['default'].createElement(
 	        'li',
-	        { key: event.key },
-	        event.time,
-	        ' ',
-	        event.message
+	        { key: event.userId },
+	        event.state
 	      );
 	    };
 	    return _react2['default'].createElement(
@@ -20089,7 +20111,7 @@
 	module.exports = exports['default'];
 
 /***/ },
-/* 162 */
+/* 161 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -20206,6 +20228,15 @@
 
 	exports['default'] = Tech;
 	module.exports = exports['default'];
+
+/***/ },
+/* 162 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	module.exports = __webpack_require__(4);
+
 
 /***/ }
 /******/ ]);

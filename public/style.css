@@ -56,12 +56,13 @@ html, body,#container,.app-container,.dashboard {
 
 .feed{
 	flex:1;
+	overflow: scroll;
 }
 
 .tech-container{
 	display: flex;
 	flex-direction: column;
-	flex:2;
+	flex:1;
 	align-items: center;
 }
 
