@@ -20096,6 +20096,8 @@
 	      return _react2['default'].createElement(
 	        'li',
 	        { key: event.userId },
+	        event.userId,
+	        ' | ',
 	        event.state
 	      );
 	    };

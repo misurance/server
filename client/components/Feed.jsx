@@ -40,7 +40,7 @@ const Feed = React.createClass({
   },
 
   render () {
-    var createFeedItem = (event) => <li key={event.userId}>{event.state}</li>;
+    var createFeedItem = (event) => <li key={event.userId}>{event.userId} | {event.state}</li>;
     return (
       <ul className='feed'>
         {this.state.feedItems.map(createFeedItem)}
