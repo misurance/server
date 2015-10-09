@@ -6,7 +6,6 @@ module.exports = {
     var location = {
      location : location
    };
-   console.log('Updating location: ' + JSON.stringify(location));
    ref.child(userId).update(location);
   }
 };
