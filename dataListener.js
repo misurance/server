@@ -137,7 +137,7 @@ var listener = function(io, rethinkdbConnection){
 								severity:acc('severity'),
 							 	distance:acc('location').distance(x.location) }
 							})
-							.filter(r.row('distance').le(100))
+							.filter(r.row('distance').le(250))
 							.run(rethinkdbConnection))
 						.map(e => parseInt(e.severity) * 10)
 						.sum()
