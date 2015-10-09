@@ -20166,7 +20166,7 @@
 	          _react2['default'].createElement(
 	            'li',
 	            null,
-	            _react2['default'].createElement('img', { src: 'http://img.stackshare.io/service/133/43sHKeth.png' }),
+	            _react2['default'].createElement('img', { src: 'https://www.pubnub.com/blog/wp-content/uploads/2014/07/SOCKETIOICON.gif' }),
 	            'socket.io'
 	          ),
 	          _react2['default'].createElement(

@@ -12,7 +12,7 @@ const Tech = React.createClass({
               RethinkDB
             </li>
             <li>
-              <img src='http://img.stackshare.io/service/133/43sHKeth.png'></img>
+              <img src='https://www.pubnub.com/blog/wp-content/uploads/2014/07/SOCKETIOICON.gif'></img>
               socket.io
             </li>
             <li>
