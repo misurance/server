@@ -88,87 +88,93 @@ var listener = function(io, rethinkdbConnection){
 		var stateChangesSubscription;
 		var premiumChangesSubscription;
 
-	  socket.on('start driving', (username, rideId)=>{
-		loggedInUser = username;
-		feedWriter.stateChanged(username, 'Drive started');
-		currentRide = rideId;
-		var trafficStream = rethinkToRxStream(trafficDataTable
-		  	.filter({rideId:currentRide})
-		  	.changes().run(rethinkdbConnection)).share();
+		socket.on('start driving', (username, rideId) => {
+			loggedInUser = username;
+			feedWriter.stateChanged(username, 'Drive started');
+			currentRide = rideId;
+			var trafficStream = rethinkToRxStream(trafficDataTable
+			  	.filter({rideId:currentRide})
+			  	.changes().run(rethinkdbConnection)).share();
 
-		var timeScore = trafficStream
-			.map(x => {
-				var hourOfDay = new Date(x.time).getHours();
-				console.log("Hour of day: " + hourOfDay);
-				return hourOfDay < 6 ? 0.2 : 0;
-			});
+			var timeScore = trafficStream
+				.map(x => {
+					var hourOfDay = new Date(x.time).getHours();
+					console.log("Hour of day: " + hourOfDay);
+					return hourOfDay < 6 ? 0.2 : 0;
+				});
 
-		var speedLimitMonitor = trafficStream
-			.filter(x => x.eventType === "position")
-			.sample(1000)
-			.do(x => {console.log("speed stream:" + x)})
-			.flatMap((event)=>{
-				console.log(event.location.coordinates);
-				return Rx.Observable.defer(() =>
-					getMaxSpeed(event.location.coordinates[0], event.location.coordinates[1])
-					.then(maxSpeed => {
-						return {
-							event: event,
-							speedLimit: maxSpeed,
-							isExceedingLimit: event.speed > maxSpeed
-						};
-					}));
-			})
-			.do((x) => console.log("SpeedLimit event: " + x))
-			.share();
+			var speedLimitMonitor = trafficStream
+				.filter(x => x.eventType === "position")
+				.sample(1000)
+				.do(x => {console.log("speed stream:" + x)})
+				.flatMap((event)=>{
+					console.log(event.location.coordinates);
+					return Rx.Observable.defer(() =>
+						getMaxSpeed(event.location.coordinates[0], event.location.coordinates[1])
+						.then(maxSpeed => {
+							return {
+								event: event,
+								speedLimit: maxSpeed,
+								isExceedingLimit: event.speed > maxSpeed
+							};
+						}));
+				})
+				.do((x) => console.log("SpeedLimit event: " + x))
+				.share();
 
-		var speedLimitScore = speedLimitMonitor
-			.map(data => data.isExceedingLimit ? data.event.speed - data.speedLimit : 0)
-			.do((x) => console.log("Speed limit score: " + x));
+			var speedLimitScore = speedLimitMonitor
+				.map(data => data.isExceedingLimit ? data.event.speed - data.speedLimit : 0)
+				.do((x) => console.log("Speed limit score: " + x));
 
-  	 	var nearbyAccidentsMonitor = trafficStream
-			.filter(x=>x.eventType === "position")
-			.do((x)=>console.log("got position item:"+ x))
-			.sample(10000)
-			.flatMap(x=>{
-				return rethinkToRxStream(accidentsTable
-						.map(function(acc) { return {
-							severity:acc('severity'),
-						 	distance:acc('location').distance(x.location) }
-						})
-						.filter(r.row('distance').le(100))
-						.run(rethinkdbConnection))
-					.map(e => parseInt(e.severity) * 10)
-					.sum()
-					.do((x) => console.log("Nearby accidents score: " + x));
-			}).share();
+	  	 	var nearbyAccidentsMonitor = trafficStream
+				.filter(x=>x.eventType === "position")
+				.do((x)=>console.log("got position item:"+ x))
+				.sample(10000)
+				.flatMap(x=>{
+					return rethinkToRxStream(accidentsTable
+							.map(function(acc) { return {
+								severity:acc('severity'),
+							 	distance:acc('location').distance(x.location) }
+							})
+							.filter(r.row('distance').le(100))
+							.run(rethinkdbConnection))
+						.map(e => parseInt(e.severity) * 10)
+						.sum()
+						.do((x) => console.log("Nearby accidents score: " + x));
+				}).share();
 
-		var speedLimitStateChanges = speedLimitMonitor
-			.distinctUntilChanged(data => data.isExceedingLimit)
-			.map(x => x.isExceedingLimit ? 'Exceeded speed limit' : 'Driving within speed limit');
+			var speedLimitStateChanges = speedLimitMonitor
+				.distinctUntilChanged(data => data.isExceedingLimit)
+				.map(x => x.isExceedingLimit ? 'Exceeded speed limit' : 'Driving within speed limit');
 
-		var nearbyAccidentsChanges = nearbyAccidentsMonitor
-			.distinctUntilChanged()
-			.map(x => x > 0 ? 'Entering accident-prone area' : 'Leaving accident-prone area');
+			var nearbyAccidentsChanges = nearbyAccidentsMonitor
+				.distinctUntilChanged()
+				.map(x => x > 0 ? 'Entering accident-prone area' : 'Leaving accident-prone area');
 
-		stateChangesSubscription = Rx.Observable.merge(speedLimitStateChanges, nearbyAccidentsChanges)
-			.subscribe(state => feedWriter.stateChanged(username, state))
+			stateChangesSubscription = Rx.Observable.merge(speedLimitStateChanges, nearbyAccidentsChanges)
+				.subscribe(state => feedWriter.stateChanged(username, state))
 
-		premiumChangesSubscription = Rx.Observable.merge(nearbyAccidentsMonitor, speedLimitScore, timeScore)
-			.scan((prev, curr) => prev + curr)
-			.do((x) => console.log("Updating premium: " + x))
-			.subscribe(function(rideScore){
-				feedWriter.updatePremium(username, rideScore);
-			},
-			ex => console.log(ex));
+			premiumChangesSubscription = Rx.Observable.merge(nearbyAccidentsMonitor, speedLimitScore, timeScore)
+				.scan((prev, curr) => prev + curr)
+				.do((x) => console.log("Updating premium: " + x))
+				.subscribe(function(rideScore){
+					feedWriter.updatePremium(username, rideScore);
+				},
+				ex => console.log(ex));
 	  	});
 
 		socket.on('position update', (time, speed, location)=>{
-			console.log("insert: " + time + ", " + speed + "," + location);
-			//update firebase
+			if (!loggedInUser) {
+				return;
+			}
+
+			console.log("insert: " + time + ", " + speed + "," + location);			
 			location = JSON.parse(location);
+
+			//update firebase
 			activeDriversWriter.updateLocation(loggedInUser, location);
-		    	trafficDataTable.insert({
+	    	
+	    	trafficDataTable.insert({
 			    user:loggedInUser,
 			    eventType: 'position',
 			    rideId: currentRide,
@@ -176,8 +182,6 @@ var listener = function(io, rethinkdbConnection){
 			    speed,
 			    location: r.point(location.longitude, location.latitude)
 			}).run(rethinkdbConnection);
-
-
 		});
 
 		socket.on('emergency brake', (time, severity)=>{
