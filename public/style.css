@@ -8,7 +8,8 @@ html, body,#container,.app-container,.dashboard {
 	display:flex;
 	flex-direction: row;
 	align-items: stretch;
-
+	background-color: #333333;
+	padding:10px;
 }
 
 .brand-logo{
@@ -27,6 +28,11 @@ html, body,#container,.app-container,.dashboard {
 	border-width: 0 1px 0 0;
 	border-color: #434343;
 	border-style: solid;
+}
+
+.events
+{
+
 }
 
 .tech-lists-container{
@@ -53,10 +59,25 @@ html, body,#container,.app-container,.dashboard {
 	align-items: center;
 }
 
+.events
+{
+	flex:1;
+}
 
 .feed{
-	flex:1;
+	height: 250px;
+    overflow: scroll;
+    /* margin: 200px; */
+    background-color: white;
+    border-radius: 20px;
+    padding: 20px;
+    margin-right: 10px;
+    font-size: 14px;
 	overflow: scroll;
+	-webkit-box-shadow: inset 3px 3px 19px -2px rgba(140,137,140,1);
+-moz-box-shadow: inset 3px 3px 19px -2px rgba(140,137,140,1);
+box-shadow: inset 3px 3px 19px -2px rgba(140,137,140,1);
+
 }
 
 .tech-container{
@@ -64,12 +85,11 @@ html, body,#container,.app-container,.dashboard {
 	flex-direction: column;
 	flex:1;
 	align-items: center;
+	color:white;
+	margin-bottom: 80px;
 }
 
-.separator{
-	height:1px;
-	background: #434343;
-}
+
 
 #map{
 	flex:1;

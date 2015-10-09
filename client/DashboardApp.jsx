@@ -4,7 +4,7 @@ const DashboardApp = React.createClass({
   render () {
     return (
       <div className='dashboard'>
-        <nav className='deep-purple lighten-3'>
+        <nav className='nav'>
           <div className="nav-wrapper">
               <img className="brand-logo center " src='images/logo.png'/>
           </div>

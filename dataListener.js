@@ -90,7 +90,7 @@ var listener = function(io, rethinkdbConnection){
 
 		socket.on('start driving', (username, rideId) => {
 			loggedInUser = username;
-			feedWriter.stateChanged(username, 'Drive started');
+			feedWriter.stateChanged(username, 'started driving');
 			currentRide = rideId;
 			var trafficStream = rethinkToRxStream(trafficDataTable
 			  	.filter({rideId:currentRide})
@@ -145,11 +145,11 @@ var listener = function(io, rethinkdbConnection){
 
 			var speedLimitStateChanges = speedLimitMonitor
 				.distinctUntilChanged(data => data.isExceedingLimit)
-				.map(x => x.isExceedingLimit ? 'Exceeded speed limit' : 'Driving within speed limit');
+				.map(x => x.isExceedingLimit ? 'exceeded speed limit' : 'is driving within speed limit');
 
 			var nearbyAccidentsChanges = nearbyAccidentsMonitor
 				.distinctUntilChanged()
-				.map(x => x > 0 ? 'Entering accident-prone area' : 'Leaving accident-prone area');
+				.map(x => x > 0 ? 'is entering accident-prone area' : 'is leaving accident-prone area');
 
 			stateChangesSubscription = Rx.Observable.merge(speedLimitStateChanges, nearbyAccidentsChanges)
 				.subscribe(state => feedWriter.stateChanged(username, state))

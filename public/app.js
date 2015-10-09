@@ -88,7 +88,7 @@
 	      { className: 'dashboard' },
 	      _react2['default'].createElement(
 	        'nav',
-	        { className: 'deep-purple lighten-3' },
+	        { className: 'nav' },
 	        _react2['default'].createElement(
 	          'div',
 	          { className: 'nav-wrapper' },
@@ -19671,10 +19671,13 @@
 
 	var map;
 	window.initMap = function () {
+	  var styles = [{ "featureType": "administrative", "elementType": "all", "stylers": [{ "visibility": "on" }, { "lightness": 33 }] }, { "featureType": "landscape", "elementType": "all", "stylers": [{ "color": "#f2e5d4" }] }, { "featureType": "poi.park", "elementType": "geometry", "stylers": [{ "color": "#c5dac6" }] }, { "featureType": "poi.park", "elementType": "labels", "stylers": [{ "visibility": "on" }, { "lightness": 20 }] }, { "featureType": "road", "elementType": "all", "stylers": [{ "lightness": 20 }] }, { "featureType": "road.highway", "elementType": "geometry", "stylers": [{ "color": "#c5c6c6" }] }, { "featureType": "road.arterial", "elementType": "geometry", "stylers": [{ "color": "#e4d7c6" }] }, { "featureType": "road.local", "elementType": "geometry", "stylers": [{ "color": "#fbfaf7" }] }, { "featureType": "water", "elementType": "all", "stylers": [{ "visibility": "on" }, { "color": "#acbcc9" }] }];
+
 	  map = new google.maps.Map(document.getElementById('map'), {
 	    center: { lat: 32.0667, lng: 34.8000 },
 	    zoom: 13
 	  });
+	  map.setOptions({ styles: styles });
 	};
 	var Map = _react2['default'].createClass({
 	  displayName: 'Map',
@@ -19739,8 +19742,11 @@
 	      _react2['default'].createElement(
 	        'div',
 	        { className: 'feed-container' },
-	        _react2['default'].createElement(_FeedJsx2['default'], null),
-	        _react2['default'].createElement('div', { className: 'separator' }),
+	        _react2['default'].createElement(
+	          'div',
+	          { className: 'events' },
+	          _react2['default'].createElement(_FeedJsx2['default'], null)
+	        ),
 	        _react2['default'].createElement(_TechJsx2['default'], null)
 	      ),
 	      _react2['default'].createElement(
@@ -20096,8 +20102,13 @@
 	      return _react2['default'].createElement(
 	        'li',
 	        { key: event.userId },
-	        event.userId,
-	        ' | ',
+	        ' ',
+	        _react2['default'].createElement(
+	          'b',
+	          null,
+	          event.userId
+	        ),
+	        ' ',
 	        event.state
 	      );
 	    };
