@@ -18,7 +18,7 @@ html, body,#container,.app-container,.dashboard {
 	display:flex;
 	align-items: stretch;
 	flex:3;
-	    z-index: -10;
+	z-index: -10;
 }
 
 .feed-container{
@@ -26,10 +26,34 @@ html, body,#container,.app-container,.dashboard {
 	flex-direction: column;
 	flex:1;
 	border-width: 0 1px 0 0;
-    border-color: #434343;
-    border-style: solid;
-
+	border-color: #434343;
+	border-style: solid;
 }
+
+.tech-lists-container{
+	display:flex;
+	flex-direction:row;
+	align-self: stretch;
+	padding-left:20px;
+	padding-right:10px;
+}
+.tech-lists-container ul {
+	flex:1;
+
+	/*text-align: lef;*/
+}
+
+.tech-lists-container ul img {
+	height: 32px;
+	width: 32px;
+	margin-right:5px;
+}
+.tech-lists-container ul li {
+	margin-top:10px;
+	display:flex;
+	align-items: center;
+}
+
 
 .feed{
 	flex:1;
@@ -48,5 +72,5 @@ html, body,#container,.app-container,.dashboard {
 }
 
 #map{
-flex:1;
+	flex:1;
 }
