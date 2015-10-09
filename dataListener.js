@@ -96,8 +96,15 @@ var listener = function(io, rethinkdbConnection){
 		  	.filter({rideId:currentRide})
 		  	.changes().run(rethinkdbConnection)).share();
 
+		var timeScore = trafficStream
+			.map(x => {
+				var hourOfDay = new Date(x.time).getHours();
+				console.log("Hour of day: " + hourOfDay);
+				return hourOfDay < 6 ? 0.2 : 0;
+			});
+
 		var speedLimitMonitor = trafficStream
-			.filter(x=>x.eventType === "position")
+			.filter(x => x.eventType === "position")
 			.sample(1000)
 			.do(x => {console.log("speed stream:" + x)})
 			.flatMap((event)=>{
@@ -147,14 +154,14 @@ var listener = function(io, rethinkdbConnection){
 		stateChangesSubscription = Rx.Observable.merge(speedLimitStateChanges, nearbyAccidentsChanges)
 			.subscribe(state => feedWriter.stateChanged(username, state))
 
-		premiumChangesSubscription = Rx.Observable.merge(nearbyAccidentsMonitor, speedLimitScore)
+		premiumChangesSubscription = Rx.Observable.merge(nearbyAccidentsMonitor, speedLimitScore, timeScore)
 			.scan((prev, curr) => prev + curr)
 			.do((x) => console.log("Updating premium: " + x))
 			.subscribe(function(rideScore){
 				feedWriter.updatePremium(username, rideScore);
 			},
 			ex => console.log(ex));
-	  });
+	  	});
 
 		socket.on('position update', (time, speed, location)=>{
 			console.log("insert: " + time + ", " + speed + "," + location);

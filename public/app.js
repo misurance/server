@@ -19661,6 +19661,12 @@
 	var _firebase2 = _interopRequireDefault(_firebase);
 
 	var map;
+	window.initMap = function () {
+	  map = new google.maps.Map(document.getElementById('map'), {
+	    center: { lat: 32.0667, lng: 34.8000 },
+	    zoom: 13
+	  });
+	};
 	var Map = _react2['default'].createClass({
 	  displayName: 'Map',
 
@@ -19689,23 +19695,27 @@
 	        self.state.drivers[snapshot.key()] = undefined;
 	      }
 	    });
-	    window.initMap = function () {
-	      map = new google.maps.Map(document.getElementById('map'), {
-	        center: { lat: 32.0667, lng: 34.8000 },
-	        zoom: 13
-	      });
-	    };
 	  },
 	  updateMarker: function updateMarker(key, lat, lng) {
-	    if (!map) return;
+	    if (!map || !lat || !lng) return;
 	    console.log(key + ': ' + lat + ',' + lng);
 	    if (this.state.drivers[key]) {
 	      this.state.drivers[key].setPosition({ lat: lat, lng: lng });
 	    } else {
+	      var image = {
+	        url: 'images/car.png',
+	        // This marker is 20 pixels wide by 32 pixels high.
+	        size: new google.maps.Size(32, 32),
+	        // The origin for this image is (0, 0).
+	        anchor: new google.maps.Point(16, 16),
+	        origin: new google.maps.Point(0, 0)
+	      };
+	      // The anchor for this image is the base of the flagpole at (0, 32).
 	      this.state.drivers[key] = new google.maps.Marker({
 	        position: { lat: lat, lng: lng },
 	        map: map,
-	        title: key
+	        title: key,
+	        icon: image
 	      });
 	    }
 	  },

@@ -1,0 +1,40 @@
+Car insurance pricing is almost flat. That's probably bad for you - if your car's at rest 6 days a week, and you're a super-safe driver, you shouldn't pay as much as that guy who's driving to work every day like some maniac. 
+We offer a pay-as-you-go car insurance using a real-time risk analysis algorithm, combined with hardware that's plugged into your car's computer, to calculate your personalized premium for every ride.
+
+Data
+----
+All accidents in Israel since 1/2014 (12500), with exact location and severity level, from CBS
+Speed limits, from OpenStreetMap
+Location, from phone GPS
+Vehicle speed, from OBD
+Time of day, from phone
+Emergency brakes, from OBD (to be implemented)
+
+Technologies
+------------
+RethinkDB		Persistency for telemetry data + reactive and geospatial capabilities, storing historic accidents (from CBS)
+socket.io 		Real-time telemetry reporting for mobile app
+React			Rendering the web UI
+React Native 	Rendering the Android UI
+Firebase		Simple push capabilities for both Android and web UI
+NodeJS			Server side, receiving telemetry data + pushing data 
+OBD				Car computer jack (onboard diagnostics) + simulator
+Rx				Skipping lots of state management
+Open StreetMap	Speed limits
+Google Maps		Web UI
+Heroku			
+Braintree		
+
+
+
+PROBLEM: I bet I can guess how much you pay for car insurance, and the reason I can guess is that we all pay pretty much the same. For most people here, I think it's probably more than you should pay, but I know for sure it's more than what my friend Yshay should pay. I'd like to introduce you to Yshay. He lives in TA, owns a car which he uses once every couple of weeks, and he's a super-safe driver. And still he pays the same as that crazy driver who almost crashed into you on Rothschild the other day.
+
+SOLUTION: Misurance is going to change all this. With Misurance, you get a fully personalized price. Everybody wins: infrequent and safe drivers are great customers for any insurance company.
+
+DEMO: This is all you need. just plug it in under your steering wheel. This device together with your mobile will stream technical data to our servers where we aggregate your current speed, the time of day, your location and identity and match against the road speed limit and accident history to provide a risk assesment in real time. This assessment determines the premium for this particular trip. And the most important thing - if you don't drive you don't pay! if you are an infrequent driver, Misurance will save you a lot of money.
+
+THIS IS WHAT IT LOOKS LIKE TO YOU: onboarding is quick and easy, and once you start your trip you know exactly what's going on.
+
+THIS IS WHAT IT LOOKS LIKE FOR THE INSURANCE COMPANY: this is a simulation, but it really works. Data flows from all devices, and is displayed on this management dashboard.
+
+TECH: We use the best technology and tools currently available to provide a reactive solution personolized for each and every one of you.
