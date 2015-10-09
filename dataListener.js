@@ -149,7 +149,7 @@ var listener = function(io, rethinkdbConnection){
 
 			var nearbyAccidentsChanges = nearbyAccidentsMonitor
 				.distinctUntilChanged()
-				.map(x => x > 0 ? 'is entering accident-prone area' : 'is leaving accident-prone area');
+				.map(x => x > 0 ? ' is entering accident-prone area' : 'is leaving accident-prone area');
 
 			stateChangesSubscription = Rx.Observable.merge(speedLimitStateChanges, nearbyAccidentsChanges)
 				.subscribe(state => feedWriter.stateChanged(username, state))
